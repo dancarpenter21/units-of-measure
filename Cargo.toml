@@ -1,0 +1,23 @@
+[package]
+name = "units-of-measure"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+description = "Type-safe units of measure with ergonomic conversions and dimensional arithmetic"
+license = "Apache-2.0"
+repository = "https://github.com/dancarpenter21/units-of-measure"
+readme = "README.md"
+exclude = ["AGENTS.md"]
+keywords = ["units", "measurement", "conversion", "physics", "type-safety"]
+categories = ["science", "mathematics"]
+
+[features]
+default = ["serde"]
+serde = ["dep:serde"]
+
+[dependencies]
+serde = { version = "1", optional = true }
+
+[dev-dependencies]
+serde_json = "1"
+serde_yaml = { package = "serde_yaml_ng", version = "0.10" }
