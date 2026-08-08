@@ -1,15 +1,12 @@
-use units_of_measure::{
-    audio,
-    frequency::{Frequency, Kilohertz, Megahertz},
-    time::{Milliseconds, Time},
-};
+use units_of_measure::{audio, frequency::Frequency, time::Seconds};
 
 fn main() {
     let a4 = audio::midi_note_frequency(69);
-    let clock = Megahertz(16.0);
-    let samples = Kilohertz(48.0) * Milliseconds(10.0);
+    let clock = Frequency::new(16_000_000.0, Seconds::new(1.0));
 
-    println!("A4: {:.1} Hz", a4.0);
-    println!("16 MHz period: {:.1} ns", clock.period().to_nanoseconds().0);
-    println!("48 kHz samples in 10 ms: {samples:.0}");
+    println!("A4: {:.1} cycles/s", a4.cycles() / a4.duration().value());
+    println!(
+        "clock: {:.1} MHz",
+        clock.cycles() / clock.duration().value() / 1_000_000.0
+    );
 }

@@ -179,6 +179,9 @@ macro_rules! impl_unit_common {
 }
 
 pub mod acceleration;
+pub mod angle;
+pub mod angular_acceleration;
+pub mod angular_velocity;
 pub mod area;
 pub mod audio;
 pub mod distance;
@@ -186,15 +189,18 @@ pub mod frequency;
 pub mod mass;
 pub mod speed;
 pub mod time;
+pub mod torque;
 pub mod weight;
 
-mod ops;
-
 pub use acceleration::Acceleration;
+pub use angle::Angle;
+pub use angular_acceleration::AngularAcceleration;
+pub use angular_velocity::AngularVelocity;
 pub use area::Area;
 pub use distance::Distance;
 pub use frequency::Frequency;
 pub use mass::Mass;
 pub use speed::Speed;
 pub use time::Time;
+pub use torque::Torque;
 pub use weight::Weight;

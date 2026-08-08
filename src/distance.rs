@@ -1,9 +1,5 @@
 //! Linear distance units and conversions.
 
-use crate::area::SquareMeters;
-use crate::speed::{MetersPerSecond, Speed};
-use crate::time::{Seconds, Time};
-
 const METERS_PER_ANGSTROM: f64 = 1e-10;
 const METERS_PER_INCH: f64 = 0.0254;
 const METERS_PER_FOOT: f64 = 0.3048;
@@ -17,7 +13,7 @@ const METERS_PER_PARSEC: f64 = METERS_PER_ASTRONOMICAL_UNIT * 648_000.0 / std::f
 /// A linear distance that can be converted into every supported distance unit.
 ///
 /// External types only need to implement [`Distance::to_meters`]; all other
-/// conversions and calculations have default implementations.
+/// conversions have default implementations.
 pub trait Distance {
     /// Converts this distance to picometers.
     fn to_picometers(&self) -> Picometers {
@@ -105,21 +101,6 @@ pub trait Distance {
     /// Returns this distance divided by another distance.
     fn ratio(&self, rhs: &dyn Distance) -> f64 {
         self.to_meters().0 / rhs.to_meters().0
-    }
-
-    /// Computes the rectangular area formed with another distance.
-    fn area_with(&self, rhs: &dyn Distance) -> SquareMeters {
-        SquareMeters(self.to_meters().0 * rhs.to_meters().0)
-    }
-
-    /// Computes speed over a time interval.
-    fn speed_over(&self, time: &dyn Time) -> MetersPerSecond {
-        MetersPerSecond(self.to_meters().0 / time.to_seconds().0)
-    }
-
-    /// Computes travel time at a speed.
-    fn travel_time_at(&self, speed: &dyn Speed) -> Seconds {
-        Seconds(self.to_meters().0 / speed.to_meters_per_second().0)
     }
 
     /// Returns whether the canonical value is finite.

@@ -1,10 +1,5 @@
 //! Time interval units and conversions.
 
-use crate::acceleration::Acceleration;
-use crate::distance::Meters;
-use crate::frequency::Frequency;
-use crate::speed::{MetersPerSecond, Speed};
-
 const SECONDS_PER_MINUTE: f64 = 60.0;
 const SECONDS_PER_HOUR: f64 = 3_600.0;
 const SECONDS_PER_DAY: f64 = 86_400.0;
@@ -86,21 +81,6 @@ pub trait Time {
     /// Returns this interval divided by another interval.
     fn ratio(&self, rhs: &dyn Time) -> f64 {
         self.to_seconds().0 / rhs.to_seconds().0
-    }
-
-    /// Computes distance traveled at a constant speed.
-    fn distance_at(&self, speed: &dyn Speed) -> Meters {
-        Meters(self.to_seconds().0 * speed.to_meters_per_second().0)
-    }
-
-    /// Computes the speed change under constant acceleration.
-    fn speed_change_at(&self, acceleration: &dyn Acceleration) -> MetersPerSecond {
-        MetersPerSecond(self.to_seconds().0 * acceleration.to_meters_per_second_squared().0)
-    }
-
-    /// Computes the cycles completed at a frequency.
-    fn cycles_at(&self, frequency: &dyn Frequency) -> f64 {
-        self.to_seconds().0 * frequency.to_hertz().0
     }
 
     /// Returns whether the canonical value is finite.

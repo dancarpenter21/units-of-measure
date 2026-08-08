@@ -1,15 +1,21 @@
 use units_of_measure::{
-    acceleration::MetersPerSecondSquared,
+    distance::{Distance, Meters},
     mass::{Kilograms, Mass},
+    time::Seconds,
     weight::Weight,
 };
 
 fn main() {
-    let cargo = Kilograms(500.0);
-    let earth = cargo.weight_at_standard_gravity();
-    let moon = cargo.weight_at(&MetersPerSecondSquared(1.62));
+    let earth_weight = Weight::new(
+        Kilograms::new(500.0),
+        Meters::new(9.80665),
+        Seconds::new(1.0),
+        Seconds::new(1.0),
+    );
 
-    println!("mass: {:.1} kg", cargo.to_kilograms().0);
-    println!("Earth weight: {:.1} N", earth.to_newtons().0);
-    println!("Moon weight: {:.1} N", moon.to_newtons().0);
+    println!(
+        "mass: {:.1} kg; gravity: {:.5} m/s²",
+        earth_weight.mass().to_kilograms().value(),
+        earth_weight.distance().to_meters().value()
+    );
 }

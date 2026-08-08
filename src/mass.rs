@@ -1,8 +1,5 @@
 //! Mass units and conversions.
 
-use crate::acceleration::{Acceleration, STANDARD_GRAVITY};
-use crate::weight::Newtons;
-
 const KILOGRAMS_PER_GRAIN: f64 = 0.000_064_798_91;
 const KILOGRAMS_PER_AVOIRDUPOIS_OUNCE: f64 = 0.028_349_523_125;
 const KILOGRAMS_PER_AVOIRDUPOIS_POUND: f64 = 0.453_592_37;
@@ -13,7 +10,7 @@ const KILOGRAMS_PER_DALTON: f64 = 1.660_539_068_92e-27;
 /// A mass that can be converted into every supported mass unit.
 ///
 /// External types only need to implement [`Mass::to_kilograms`]. Mass does not
-/// depend on gravity; use the `weight` module for force.
+/// does not depend on gravity.
 pub trait Mass {
     /// Converts this mass to nanograms.
     fn to_nanograms(&self) -> Nanograms {
@@ -101,16 +98,6 @@ pub trait Mass {
     /// Returns this mass divided by another mass.
     fn ratio(&self, rhs: &dyn Mass) -> f64 {
         self.to_kilograms().0 / rhs.to_kilograms().0
-    }
-
-    /// Computes weight under an acceleration.
-    fn weight_at(&self, acceleration: &dyn Acceleration) -> Newtons {
-        Newtons(self.to_kilograms().0 * acceleration.to_meters_per_second_squared().0)
-    }
-
-    /// Computes weight under conventional standard gravity.
-    fn weight_at_standard_gravity(&self) -> Newtons {
-        self.weight_at(&STANDARD_GRAVITY)
     }
 
     /// Returns whether the canonical value is finite.
