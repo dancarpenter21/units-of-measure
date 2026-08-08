@@ -39,5 +39,5 @@ pub fn is_nominally_audible<T: Time>(frequency: &Frequency<T>) -> bool {
 }
 
 fn cycles_per_second<T: Time>(frequency: &Frequency<T>) -> f64 {
-    frequency.cycles() / frequency.duration().to_seconds().value()
+    frequency.value_in::<Seconds>()
 }

@@ -5,11 +5,11 @@ use units_of_measure::{
     angular_velocity::AngularVelocity,
     area::Area,
     audio,
-    distance::{Distance, Feet, Meters},
+    distance::{Distance, DistanceUnit, Feet, Meters, Miles},
     frequency::Frequency,
     mass::{Kilograms, Mass},
     speed::Speed,
-    time::{Seconds, Time},
+    time::{Hours, Seconds, Time, TimeUnit},
     torque::Torque,
     weight::Weight,
 };
@@ -20,7 +20,7 @@ fn assert_close(actual: f64, expected: f64) {
 }
 
 fn miles_per_hour<D: Distance, T: Time>(speed: &Speed<D, T>) -> f64 {
-    speed.distance().to_miles().value() / speed.time().to_hours().value()
+    speed.value_in::<Miles, Hours>()
 }
 
 #[test]
@@ -30,6 +30,7 @@ fn speed_retains_components_and_converts_at_the_call_site() {
     let _: &Seconds = speed.time();
 
     assert_close(miles_per_hour(&speed), 22.369_362_920_544_024);
+    assert_close(speed.value(), 10.0);
     assert!(speed.is_finite());
 }
 
@@ -39,6 +40,7 @@ fn area_retains_its_two_distance_components() {
     let square_feet = area.width().to_feet().value() * area.height().to_feet().value();
 
     assert_close(square_feet, 118.110_236_220_472_44);
+    assert_close(area.value_in::<Feet, Feet>(), 118.110_236_220_472_44);
     assert!(area.is_finite());
 }
 
@@ -56,6 +58,8 @@ fn acceleration_and_weight_retain_all_base_factors() {
     assert_eq!(acceleration, STANDARD_GRAVITY);
     assert_close(weight.mass().to_kilograms().value(), 80.0);
     assert_close(weight.distance().to_meters().value(), 9.80665);
+    assert_close(acceleration.value(), 9.80665);
+    assert_close(weight.value(), 784.532);
     assert!(acceleration.is_finite());
     assert!(weight.is_finite());
 }
@@ -106,6 +110,7 @@ fn frequency_retains_cycles_and_duration() {
     let frequency = Frequency::new(48_000.0, Seconds::new(1.0));
     assert_eq!(frequency.cycles(), 48_000.0);
     assert_eq!(frequency.duration().to_seconds().value(), 1.0);
+    assert_eq!(frequency.value(), 48_000.0);
     assert!(frequency.is_finite());
 }
 
@@ -136,10 +141,22 @@ fn angles_convert_and_rotational_quantities_retain_components() {
 
     let _: &Degrees = velocity.angle();
     assert_close(velocity.time().to_seconds().value(), 2.0);
+    assert_close(
+        velocity.value_in::<Radians, Seconds>(),
+        std::f64::consts::PI / 2.0,
+    );
     assert_close(acceleration.angle().to_degrees().value(), 180.0);
+    assert_close(
+        acceleration.value_in::<Radians, Seconds, Seconds>(),
+        std::f64::consts::PI / 2.0,
+    );
     assert_close(torque.mass().to_kilograms().value(), 2.0);
     assert_close(torque.first_distance().to_meters().value(), 3.0);
     assert_close(torque.second_distance().to_meters().value(), 4.0);
+    assert_close(
+        torque.value_in::<Kilograms, Meters, Meters, Seconds, Seconds>(),
+        24.0,
+    );
     assert!(velocity.is_finite());
     assert!(acceleration.is_finite());
     assert!(torque.is_finite());
@@ -151,8 +168,18 @@ fn composed_quantities_accept_custom_primitive_units() {
     struct Leagues(f64);
 
     impl Distance for Leagues {
+        fn value(&self) -> f64 {
+            self.0
+        }
+
         fn to_meters(&self) -> Meters {
             Meters::new(self.0 * 4_828.032)
+        }
+    }
+
+    impl DistanceUnit for Leagues {
+        fn from_meters(meters: Meters) -> Self {
+            Self(meters.value() / 4_828.032)
         }
     }
 
@@ -160,13 +187,28 @@ fn composed_quantities_accept_custom_primitive_units() {
     struct Shifts(f64);
 
     impl Time for Shifts {
+        fn value(&self) -> f64 {
+            self.0
+        }
+
         fn to_seconds(&self) -> Seconds {
             Seconds::new(self.0 * 28_800.0)
         }
     }
 
+    impl TimeUnit for Shifts {
+        fn from_seconds(seconds: Seconds) -> Self {
+            Self(seconds.value() / 28_800.0)
+        }
+    }
+
     let speed = Speed::new(Leagues(1.0), Shifts(1.0));
     assert_close(miles_per_hour(&speed), 0.375);
+    assert_close(speed.value(), 1.0);
+
+    let converted =
+        Speed::new(Meters::new(4_828.032), Seconds::new(28_800.0)).to_units::<Leagues, Shifts>();
+    assert_close(converted.value(), 1.0);
 }
 
 #[test]

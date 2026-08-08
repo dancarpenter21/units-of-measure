@@ -15,6 +15,14 @@ const METERS_PER_PARSEC: f64 = METERS_PER_ASTRONOMICAL_UNIT * 648_000.0 / std::f
 /// External types only need to implement [`Distance::to_meters`]; all other
 /// conversions have default implementations.
 pub trait Distance {
+    /// Returns the numeric value expressed in this distance's own unit.
+    ///
+    /// Custom distance types that retain a non-canonical numeric value should
+    /// override this method.
+    fn value(&self) -> f64 {
+        self.to_meters().value()
+    }
+
     /// Converts this distance to picometers.
     fn to_picometers(&self) -> Picometers {
         Picometers(self.to_meters().0 / 1e-12)
@@ -109,6 +117,12 @@ pub trait Distance {
     }
 }
 
+/// A distance unit that can be used as the destination of a conversion.
+pub trait DistanceUnit: Distance {
+    /// Creates this unit from a value expressed in meters.
+    fn from_meters(meters: Meters) -> Self;
+}
+
 macro_rules! define_distance_unit {
     ($name:ident, $method:ident, $symbol:literal, $factor:expr, $doc:literal) => {
         #[doc = $doc]
@@ -116,8 +130,18 @@ macro_rules! define_distance_unit {
         pub struct $name(pub f64);
 
         impl Distance for $name {
+            fn value(&self) -> f64 {
+                self.0
+            }
+
             fn to_meters(&self) -> Meters {
                 Meters(self.0 * $factor)
+            }
+        }
+
+        impl DistanceUnit for $name {
+            fn from_meters(meters: Meters) -> Self {
+                Self(meters.0 / $factor)
             }
         }
 

@@ -1,8 +1,8 @@
 //! Torque as mass times two distance components divided by two time components.
 
-use crate::distance::Distance;
-use crate::mass::Mass;
-use crate::time::Time;
+use crate::distance::{Distance, DistanceUnit};
+use crate::mass::{Mass, MassUnit};
+use crate::time::{Time, TimeUnit};
 use crate::weight::Weight;
 
 /// A torque represented by its base physical components.
@@ -69,6 +69,44 @@ impl<M: Mass, D1: Distance, D2: Distance, T1: Time, T2: Time> Torque<M, D1, D2, 
     /// Returns the second time component in its original unit.
     pub const fn second_time(&self) -> &T2 {
         &self.second_time
+    }
+
+    /// Converts all base components to requested units.
+    pub fn to_units<
+        M2: MassUnit,
+        E1: DistanceUnit,
+        E2: DistanceUnit,
+        U1: TimeUnit,
+        U2: TimeUnit,
+    >(
+        &self,
+    ) -> Torque<M2, E1, E2, U1, U2> {
+        Torque::new(
+            M2::from_kilograms(self.mass.to_kilograms()),
+            E1::from_meters(self.first_distance.to_meters()),
+            E2::from_meters(self.second_distance.to_meters()),
+            U1::from_seconds(self.first_time.to_seconds()),
+            U2::from_seconds(self.second_time.to_seconds()),
+        )
+    }
+
+    /// Returns the torque value in the currently stored component units.
+    pub fn value(&self) -> f64 {
+        self.mass.value() * self.first_distance.value() * self.second_distance.value()
+            / (self.first_time.value() * self.second_time.value())
+    }
+
+    /// Returns the torque value after converting all components to requested units.
+    pub fn value_in<
+        M2: MassUnit,
+        E1: DistanceUnit,
+        E2: DistanceUnit,
+        U1: TimeUnit,
+        U2: TimeUnit,
+    >(
+        &self,
+    ) -> f64 {
+        self.to_units::<M2, E1, E2, U1, U2>().value()
     }
 
     /// Returns whether all components are finite.

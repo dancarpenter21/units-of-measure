@@ -1,9 +1,4 @@
-use units_of_measure::{
-    distance::{Distance, Meters},
-    mass::{Kilograms, Mass},
-    time::Seconds,
-    weight::Weight,
-};
+use units_of_measure::{distance::Meters, mass::Kilograms, time::Seconds, weight::Weight};
 
 fn main() {
     let earth_weight = Weight::new(
@@ -15,7 +10,7 @@ fn main() {
 
     println!(
         "mass: {:.1} kg; gravity: {:.5} m/s²",
-        earth_weight.mass().to_kilograms().value(),
-        earth_weight.distance().to_meters().value()
+        earth_weight.mass().value(),
+        earth_weight.value() / earth_weight.mass().value()
     );
 }

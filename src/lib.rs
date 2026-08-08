@@ -192,15 +192,17 @@ pub mod time;
 pub mod torque;
 pub mod weight;
 
+mod ops;
+
 pub use acceleration::Acceleration;
-pub use angle::Angle;
+pub use angle::{Angle, AngleUnit};
 pub use angular_acceleration::AngularAcceleration;
 pub use angular_velocity::AngularVelocity;
 pub use area::Area;
-pub use distance::Distance;
+pub use distance::{Distance, DistanceUnit};
 pub use frequency::Frequency;
-pub use mass::Mass;
+pub use mass::{Mass, MassUnit};
 pub use speed::Speed;
-pub use time::Time;
+pub use time::{Time, TimeUnit};
 pub use torque::Torque;
 pub use weight::Weight;

@@ -1,9 +1,9 @@
 //! Weight as mass times distance divided by two time components.
 
 use crate::acceleration::Acceleration;
-use crate::distance::Distance;
-use crate::mass::Mass;
-use crate::time::Time;
+use crate::distance::{Distance, DistanceUnit};
+use crate::mass::{Mass, MassUnit};
+use crate::time::{Time, TimeUnit};
 
 /// A weight or force represented by its base physical components.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -50,6 +50,29 @@ impl<M: Mass, D: Distance, T1: Time, T2: Time> Weight<M, D, T1, T2> {
     /// Returns the second time component in its original unit.
     pub const fn second_time(&self) -> &T2 {
         &self.second_time
+    }
+
+    /// Converts all base components to requested units.
+    pub fn to_units<M2: MassUnit, D2: DistanceUnit, U1: TimeUnit, U2: TimeUnit>(
+        &self,
+    ) -> Weight<M2, D2, U1, U2> {
+        Weight::new(
+            M2::from_kilograms(self.mass.to_kilograms()),
+            D2::from_meters(self.distance.to_meters()),
+            U1::from_seconds(self.first_time.to_seconds()),
+            U2::from_seconds(self.second_time.to_seconds()),
+        )
+    }
+
+    /// Returns the weight value in the currently stored component units.
+    pub fn value(&self) -> f64 {
+        self.mass.value() * self.distance.value()
+            / (self.first_time.value() * self.second_time.value())
+    }
+
+    /// Returns the weight value after converting all components to requested units.
+    pub fn value_in<M2: MassUnit, D2: DistanceUnit, U1: TimeUnit, U2: TimeUnit>(&self) -> f64 {
+        self.to_units::<M2, D2, U1, U2>().value()
     }
 
     /// Consumes this weight and returns its base components.

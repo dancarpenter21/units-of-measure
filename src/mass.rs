@@ -12,6 +12,14 @@ const KILOGRAMS_PER_DALTON: f64 = 1.660_539_068_92e-27;
 /// External types only need to implement [`Mass::to_kilograms`]. Mass does not
 /// does not depend on gravity.
 pub trait Mass {
+    /// Returns the numeric value expressed in this mass's own unit.
+    ///
+    /// Custom mass types that retain a non-canonical numeric value should
+    /// override this method.
+    fn value(&self) -> f64 {
+        self.to_kilograms().value()
+    }
+
     /// Converts this mass to nanograms.
     fn to_nanograms(&self) -> Nanograms {
         Nanograms(self.to_kilograms().0 / 1e-12)
@@ -106,6 +114,12 @@ pub trait Mass {
     }
 }
 
+/// A mass unit that can be used as the destination of a conversion.
+pub trait MassUnit: Mass {
+    /// Creates this unit from a value expressed in kilograms.
+    fn from_kilograms(kilograms: Kilograms) -> Self;
+}
+
 macro_rules! define_mass_unit {
     ($name:ident, $method:ident, $symbol:literal, $factor:expr, $doc:literal) => {
         #[doc = $doc]
@@ -113,8 +127,18 @@ macro_rules! define_mass_unit {
         pub struct $name(pub f64);
 
         impl Mass for $name {
+            fn value(&self) -> f64 {
+                self.0
+            }
+
             fn to_kilograms(&self) -> Kilograms {
                 Kilograms(self.0 * $factor)
+            }
+        }
+
+        impl MassUnit for $name {
+            fn from_kilograms(kilograms: Kilograms) -> Self {
+                Self(kilograms.0 / $factor)
             }
         }
 

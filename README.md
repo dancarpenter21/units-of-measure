@@ -34,14 +34,13 @@ number:
 
 ```rust
 use units_of_measure::{
-    distance::{Distance, Meters},
+    distance::{Meters, Miles},
     speed::Speed,
-    time::{Seconds, Time},
+    time::{Hours, Seconds},
 };
 
 let speed = Speed::new(Meters::new(10.0), Seconds::new(1.0));
-let miles_per_hour = speed.distance().to_miles().value()
-    / speed.time().to_hours().value();
+let miles_per_hour = speed.value_in::<Miles, Hours>();
 
 assert!((miles_per_hour - 22.369_362_920_544).abs() < 1e-12);
 ```
@@ -51,14 +50,20 @@ Functions can accept any concrete component units while preserving type safety:
 ```rust
 use units_of_measure::{
     distance::Distance,
+    distance::Miles,
     speed::Speed,
     time::Time,
+    time::Hours,
 };
 
 fn miles_per_hour<D: Distance, T: Time>(speed: &Speed<D, T>) -> f64 {
-    speed.distance().to_miles().value() / speed.time().to_hours().value()
+    speed.to_units::<Miles, Hours>().value()
 }
 ```
+
+Built-in units are valid conversion targets. A custom unit can opt in as a
+target by implementing its dimension's `DistanceUnit`, `TimeUnit`, `MassUnit`,
+or `AngleUnit` trait.
 
 The available composed concepts are:
 
@@ -71,10 +76,29 @@ The available composed concepts are:
 - `AngularAcceleration<A, T1, T2>` — angle divided by two time components.
 - `Torque<M, D1, D2, T1, T2>` — mass times two distances divided by two time components.
 
-All component accessors return references in their original units. Composed
-quantities deliberately do not provide canonical scalar values or
-cross-dimensional operators: convert the components relevant to the
-calculation, then call `value()`.
+All component accessors return references in their original units. Every
+composed quantity also owns its physical formula: use `value()` for its current
+component units, `to_units::<...>().value()` for converted components, or the
+`value_in::<...>()` shorthand. Supported physical identities are available as
+operators; arbitrary composite addition, subtraction, and scaling remain
+intentionally unsupported.
+
+| Expression | Result |
+| --- | --- |
+| `Distance * Distance` | `Area` |
+| `Distance / Time` | `Speed` |
+| `Distance / Speed` | `Seconds` |
+| `Speed * Time` or `Time * Speed` | `Meters` |
+| `Speed / Time` | canonical `Acceleration` |
+| `Acceleration * Time` or `Time * Acceleration` | canonical `Speed` |
+| `Mass * Acceleration` or `Acceleration * Mass` | canonical `Weight` |
+| `Weight * Distance` or `Distance * Weight` | `Torque` |
+| `Torque / Distance` | canonical `Weight` |
+| `Angle / Time` | `AngularVelocity` |
+| `AngularVelocity * Time` or `Time * AngularVelocity` | `Radians` |
+| `AngularVelocity / Time` | canonical `AngularAcceleration` |
+| `AngularAcceleration * Time` or `Time * AngularAcceleration` | canonical `AngularVelocity` |
+| `Frequency * Time` or `Time * Frequency` | cycles as `f64` |
 
 Flattened concepts also provide constructors that accept their immediate
 physical source concepts. Use `Acceleration::from_speed_and_time`,
@@ -139,8 +163,7 @@ use units_of_measure::{
 };
 
 let rotation = AngularVelocity::new(Degrees::new(180.0), Seconds::new(2.0));
-let radians_per_second = rotation.angle().to_radians().value()
-    / rotation.time().to_seconds().value();
+let radians_per_second = rotation.value_in::<units_of_measure::angle::Radians, Seconds>();
 
 assert!((radians_per_second - std::f64::consts::PI / 2.0).abs() < 1e-12);
 ```
@@ -176,6 +199,57 @@ use units_of_measure::{
 };
 
 let invalid = Speed::new(Meters::new(10.0), Kilograms::new(1.0));
+```
+
+The library does not infer unmodeled or uncommon inverse relationships:
+
+```compile_fail
+use units_of_measure::{area::Area, distance::Meters};
+
+let area = Area::new(Meters::new(2.0), Meters::new(3.0));
+let invalid = area / Meters::new(1.0);
+```
+
+```compile_fail
+use units_of_measure::{
+    mass::Kilograms,
+    distance::Meters,
+    time::Seconds,
+    weight::Weight,
+};
+
+let weight = Weight::new(
+    Kilograms::new(1.0),
+    Meters::new(1.0),
+    Seconds::new(1.0),
+    Seconds::new(1.0),
+);
+let invalid = weight / Kilograms::new(1.0);
+```
+
+```compile_fail
+use units_of_measure::{
+    distance::Meters,
+    mass::Kilograms,
+    time::Seconds,
+    torque::Torque,
+    weight::Weight,
+};
+
+let torque = Torque::new(
+    Kilograms::new(1.0),
+    Meters::new(1.0),
+    Meters::new(1.0),
+    Seconds::new(1.0),
+    Seconds::new(1.0),
+);
+let weight = Weight::new(
+    Kilograms::new(1.0),
+    Meters::new(1.0),
+    Seconds::new(1.0),
+    Seconds::new(1.0),
+);
+let invalid = torque / weight;
 ```
 
 The crate forbids unsafe code.

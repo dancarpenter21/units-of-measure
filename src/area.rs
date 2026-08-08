@@ -1,6 +1,6 @@
 //! Area as two distance components.
 
-use crate::distance::Distance;
+use crate::distance::{Distance, DistanceUnit};
 
 /// A rectangular area represented by its width and height.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -24,6 +24,24 @@ impl<W: Distance, H: Distance> Area<W, H> {
     /// Returns the height component in its original unit.
     pub const fn height(&self) -> &H {
         &self.height
+    }
+
+    /// Converts both distance components to requested units.
+    pub fn to_units<W2: DistanceUnit, H2: DistanceUnit>(&self) -> Area<W2, H2> {
+        Area::new(
+            W2::from_meters(self.width.to_meters()),
+            H2::from_meters(self.height.to_meters()),
+        )
+    }
+
+    /// Returns the area value in the currently stored component units.
+    pub fn value(&self) -> f64 {
+        self.width.value() * self.height.value()
+    }
+
+    /// Returns the area value after converting both components to requested units.
+    pub fn value_in<W2: DistanceUnit, H2: DistanceUnit>(&self) -> f64 {
+        self.to_units::<W2, H2>().value()
     }
 
     /// Returns whether both components are finite.

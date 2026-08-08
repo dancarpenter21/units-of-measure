@@ -13,6 +13,14 @@ const SECONDS_PER_JULIAN_YEAR: f64 = 365.25 * SECONDS_PER_DAY;
 ///
 /// External types only need to implement [`Time::to_seconds`].
 pub trait Time {
+    /// Returns the numeric value expressed in this interval's own unit.
+    ///
+    /// Custom time types that retain a non-canonical numeric value should
+    /// override this method.
+    fn value(&self) -> f64 {
+        self.to_seconds().value()
+    }
+
     /// Converts this interval to femtoseconds.
     fn to_femtoseconds(&self) -> Femtoseconds {
         Femtoseconds(self.to_seconds().0 / 1e-15)
@@ -89,6 +97,12 @@ pub trait Time {
     }
 }
 
+/// A time unit that can be used as the destination of a conversion.
+pub trait TimeUnit: Time {
+    /// Creates this unit from a value expressed in seconds.
+    fn from_seconds(seconds: Seconds) -> Self;
+}
+
 macro_rules! define_time_unit {
     ($name:ident, $method:ident, $symbol:literal, $factor:expr, $doc:literal) => {
         #[doc = $doc]
@@ -96,8 +110,18 @@ macro_rules! define_time_unit {
         pub struct $name(pub f64);
 
         impl Time for $name {
+            fn value(&self) -> f64 {
+                self.0
+            }
+
             fn to_seconds(&self) -> Seconds {
                 Seconds(self.0 * $factor)
+            }
+        }
+
+        impl TimeUnit for $name {
+            fn from_seconds(seconds: Seconds) -> Self {
+                Self(seconds.0 / $factor)
             }
         }
 
